@@ -1,50 +1,81 @@
 const express=require("express")
 const bodyparser=require("body-parser")
+const Leaders=require("../models/leaders")
+const mongoose=require("mongoose")
 
 const leaderRouter=express.Router()
 leaderRouter.use(bodyparser.json())
 
 leaderRouter.route("/")
-.all((req,res,next)=>{
-    res.statusCode=200
-    res.setHeader("Content-Type","text/plain")
-
-    next()
-})
 .get((req,res,next)=>{
-    res.end("We will send the leadership to you!")
+    Leaders.find({})
+    .then((leaders)=>{
+        res.statusCode=200
+        res.setHeader("Content-Type","application/json")
+        res.json(leaders)
+    },err => console.log(err))
+    .catch( err => next(err))
 })
 .post((req,res,next)=>{
-    res.end("We will add the leader to you!"+req.body.name +" and the discription : "+req.body.discription)
+    Leaders.create(req.body)
+    .then((leader)=>{
+        console.log("leader created!")
+        res.statusCode=200
+        res.setHeader("Content-Type","application/json")
+        res.json(leader)
+    },err => console.log(err))
+    .catch( err => next(err))
 })
 .put((req,res,next)=>{
     res.statusCode=403
     res.end("PUT command is not supported for /leadership !")
 })
 .delete((req,res,next)=>{
-    res.end("We will delete all leadership for you !")
+    Leaders.remove({})
+    .then((resp)=>{
+        res.statusCode=200
+        res.setHeader("Content-Type","application/json")
+        res.json(resp)
+    },err => console.log(err))
+    .catch(err => next(err))
 })
 
 leaderRouter.route("/:leaderId")
-.all((req,res,next)=>{
-    res.statusCode=200
-    res.setHeader("Content-Type","text/plain")
-
-    next()
-})
 .get((req,res,next)=>{
-    res.end("We will send the "+req.params.leaderId+" leader to you!")
+    Leaders.findById(req.params.leaderId)
+    .then((leader)=>{
+        res.statusCode=200
+        res.setHeader("Content-Type","application/json")
+        res.json(leader)
+    },err => console.log(err))
+    .catch( err => next(err))
 })
 .post((req,res,next)=>{
     res.statusCode=403
     res.end("POST command is not supported for /leadership/"+req.params.leaderId)
 })
 .put((req,res,next)=>{
-    res.write("Change on leader "+req.params.leaderId+" loading...")
-    res.end("the leader has been changed the name: "+req.body.name+" and discription: "+req.body.discription)
+    Leaders.findByIdAndUpdate(req.params.leaderId,
+        {
+            $set:req.body
+        },{new:true})
+    .then((leader)=>{
+        console.log("leader updated!")
+        res.statusCode=200
+        res.setHeader("Content-Type","application/json")
+        res.json(leader)
+    },err => console.log(err))
+    .catch( err => next(err))
 })
 .delete((req,res,next)=>{
-    res.end("We will delete the "+req.params.leaderId+" leader for you !")
+    Leaders.findByIdAndRemove(req.params.leaderId)
+    .then((resp)=>{
+        console.log("Leader Deleted!")
+        res.statusCode=200
+        res.setHeader("Content-Type","application/json")
+        res.json(resp)
+    },err => console.log(err))
+    .catch( err => next(err))
 })
 
 module.exports=leaderRouter
