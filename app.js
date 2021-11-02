@@ -15,6 +15,9 @@ const Dishes=require("./models/dishes")
 const Promos=require("./models/promotions")
 const Leaders=require("./models/leaders");
 const { signedCookies } = require('cookie-parser');
+const session=require("express-session")
+const fileStore=require("session-file-store")(session)
+
 
 const url="mongodb://localhost:27017/conFusion"
 const connect=mongoose.connect(url)
@@ -32,55 +35,41 @@ app.set('view engine', 'jade');
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(cookieParser("12345-67890-09876-54321"));
+// app.use(cookieParser("12345-67890-09876-54321"));
+app.use(session({
+  name:"session-id",
+  secret:"12345-67890-09876-54321",
+  saveUninitialized:false,
+  resave:false,
+  store: new fileStore()
+}))
+
+
+app.use('/', indexRouter);
+app.use('/users', usersRouter);
+
 
 app.use(function auth(req,res,next){
-  console.log(req.signedCookies)
+  console.log(req.session)
 
-  if(!req.signedCookies.user){
-    let authHeader=req.headers.authorization
-    if(!authHeader){
+  if(!req.session.user){
       let err=new Error("You are not authorized!")
-  
-      res.setHeader("WWW-Authenticate","Basic")
-      err.status=401
+      err.status=403
       return next(err)
     }
-    else{
-      let auth=new Buffer.from(authHeader.split(" ")[1],"base64").toString().split(":")
-      let userName=auth[0]
-      let password=auth[1]
-  
-      if(userName === "admin" && password === "password"){
-        res.cookie("user","admin",{signed : true})
-        next()
-      }
-      else{
-        let err=new Error("You are not authorized!")
-  
-        res.setHeader("WWW-Authenticate","Basic")
-        err.status=401
-        return next(err)
-      }
-    }
-  }
   else{
-    if(req.signedCookies.user === "admin"){
+    if(req.session.user === "authenticated"){
       next()
     }
     else{
       let err=new Error("You are not authorized!")
-  
-      err.status=401
+      err.status=403
       return next(err)
     }
   }
 })
 
 app.use(express.static(path.join(__dirname, 'public')));
-
-app.use('/', indexRouter);
-app.use('/users', usersRouter);
 app.use('/dishes', dishRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
