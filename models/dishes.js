@@ -15,8 +15,8 @@ const commentSchema=new schema({
         required:true
     },
     auther:{
-        type:String,
-        require:true
+        type:mongoose.Schema.Types.ObjectId,
+        ref:"User"
     }
 },{
     timestamps:true
