@@ -1,46 +1,47 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 
-var indexRouter = require('./routes/index');
-var usersRouter = require('./routes/users');
-var dishRouter = require('./routes/dishRouter');
-var promoRouter = require('./routes/promoRouter');
-var leaderRouter = require('./routes/leaderRouter');
-var uploadRouter = require('./routes/uploadRouter');
-var favRouter = require('./routes/favorites');
+const indexRouter = require('./routes/index');
+const usersRouter = require('./routes/users');
+const dishRouter = require('./routes/dishRouter');
+const commentRouter = require('./routes/commentRouter');
+const promoRouter = require('./routes/promoRouter');
+const leaderRouter = require('./routes/leaderRouter');
+const uploadRouter = require('./routes/uploadRouter');
+const favRouter = require('./routes/favorites');
 
-const mongoose=require("mongoose")
-const Dishes=require("./models/dishes")
-const Promos=require("./models/promotions")
-const Leaders=require("./models/leaders");
+const mongoose = require("mongoose");
+const Dishes = require("./models/dishes");
+const Promos = require("./models/promotions");
+const Leaders = require("./models/leaders");
 const { signedCookies } = require('cookie-parser');
-const session=require("express-session")
-const fileStore=require("session-file-store")(session)
-const passport = require("passport")
-const authenticate = require("./authenticate")
+const session = require("express-session");
+const fileStore = require("session-file-store")(session);
+const passport = require("passport");
+const authenticate = require("./authenticate");
 const config = require('./config');
 
 
-const url=config.mongoUrl
-const connect=mongoose.connect(url)
+const url = config.mongoUrl;
+const connect = mongoose.connect(url);
 
 connect.then((db)=>{
   console.log("Connected correctly to the server!")
-},err=>console.log(err) )
+},err=>console.log(err) );
 
 var app = express();
 
-app.all('*',(req,res,next)=>{
+app.all('*', (req, res, next)=>{
   if(req.secure){
-    next()
+    return next();
   }
   else{
-    res.redirect(307,'https://'+ req.hostname + ':' + app.get('secPort') + req.url)
+    res.redirect(307, 'https://' + req.hostname + ':' + app.get('secPort') + req.url);
   }
-})
+});
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -59,6 +60,7 @@ app.use('/users', usersRouter);
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/dishes', dishRouter);
+app.use('/comments', commentRouter);
 app.use('/promotions', promoRouter);
 app.use('/leaders', leaderRouter);
 app.use('/imageUpload', uploadRouter);

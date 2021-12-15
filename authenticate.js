@@ -1,18 +1,18 @@
-const passport = require("passport")
-const localStrategy = require("passport-local").Strategy
-const JwtStrategy = require("passport-jwt").Strategy
+const passport = require("passport");
+const localStrategy = require("passport-local").Strategy;
+const JwtStrategy = require("passport-jwt").Strategy;
 const ExtractJwt = require('passport-jwt').ExtractJwt;
 const jwt = require('jsonwebtoken');
 const FacebookTokenStrategy = require('passport-facebook-token');
 
 
 
-const User = require("./models/user")
-const config = require("./config")
+const User = require("./models/user");
+const config = require("./config");
 
-passport.use(new localStrategy(User.authenticate()))
-passport.serializeUser(User.serializeUser())
-passport.deserializeUser(User.deserializeUser())
+passport.use(new localStrategy(User.authenticate()));
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
 exports.getToken = (user) => {
     return jwt.sign(user, config.secretKey,
@@ -41,13 +41,13 @@ exports.jwtPassport = passport.use(new JwtStrategy(opts,
 
 exports.verifyUser = passport.authenticate('jwt', {session: false});
 
-exports.verifyAdmin = (req,res,next) => {
+exports.verifyAdmin = (req, res, next) => {
     if(req.user.admin)
-        next()
+        return next();
     else{
-        let err = new Error("You are not authorized as an admin!")
-        err.status = 403
-        return next(err)
+        let err = new Error("You are not authorized as an admin!");
+        err.status = 403;
+        return next(err);
     }
 }
 
